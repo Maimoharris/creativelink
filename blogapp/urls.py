@@ -5,6 +5,7 @@ urlpatterns = [
     path('services/',services_view,name='services'),
     path('about/',about_view,name='about'),
     path('contact/',contact_view,name='contact'),
+    path('api/contact/',contact_form,name="Fill Form"),
     path('projects',projects_view, name='projects'),
     path('project/<slug:slug>/',project_detail,name='project_detail'),
     path('blog/',blog_view,name='blog'),

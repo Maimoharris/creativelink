@@ -27,7 +27,7 @@
                 </div>
                 <div>
                     <h5>Office Location</h5>
-                    <p>123 Tech Plaza, Suite 500<br>Silicon Valley, CA 94025</p>
+                    <p>Sonac Street, Bamenda, Cameroon</p>
                 </div>
             </div>
             
@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <h5>Phone</h5>
-                    <p>+1 (555) 123-4567<br>+1 (555) 765-4321</p>
+                    <p>+237654910514<br>+237680226898</p>
                 </div>
             </div>
             
@@ -79,12 +79,8 @@
                     <form id="contactForm">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="firstName" class="form-label">First Name*</label>
-                                <input type="text" class="form-control" id="firstName" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="lastName" class="form-label">Last Name*</label>
-                                <input type="text" class="form-control" id="lastName" required>
+                                <label for="name" class="form-label">Name*</label>
+                                <input type="text" class="form-control" id="name" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="email" class="form-label">Email*</label>
@@ -93,10 +89,6 @@
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number</label>
                                 <input type="tel" class="form-control" id="phone">
-                            </div>
-                            <div class="col-12">
-                                <label for="company" class="form-label">Company Name</label>
-                                <input type="text" class="form-control" id="company">
                             </div>
                             <div class="col-12">
                                 <label for="subject" class="form-label">Subject*</label>
@@ -117,6 +109,7 @@
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary btn-lg w-100">Submit Message</button>
                             </div>
+                            <div id="formResponse" class="mt-3"></div>
                         </div>
                     </form>
                 </div>
@@ -129,7 +122,7 @@
 <div class="container-fluid px-0 mt-5">
     <div class="map-container">
         <div class="ratio ratio-21x9">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101268.3792342541!2d-122.17939653565069!3d37.4219998609604!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fbb2a678bea9d%3A0x29cdf01a44fc687f!2sStanford%2C%20CA!5e0!3m2!1sen!2sus!4v1683888104732!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1402.9880955464196!2d10.155673740232304!3d5.960360877503202!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x105f172b20c8d2f9%3A0xa27dc56e2a6d1d66!2sMr3000Bits!5e0!3m2!1sen!2scm!4v1755427082978!5m2!1sen!2scm" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
     </div>
 </div>
@@ -196,43 +189,108 @@
     </div>
 </div>
 
-<!-- JavaScript for form validation -->
+<!-- JavaScript for form validation + sending to backend -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const contactForm = document.getElementById('contactForm');
-    
+    const formResponse = document.getElementById('formResponse');
+
     if (contactForm) {
-        contactForm.addEventListener('submit', function(event) {
+        contactForm.addEventListener('submit', async function(event) {
             event.preventDefault();
-            
-            // Basic validation
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const subject = document.getElementById('subject').value;
-            const message = document.getElementById('message').value;
-            
-            if (!firstName || !lastName || !email || !subject || !message) {
-                alert('Please fill in all required fields.');
+
+            // Clear previous response
+            formResponse.innerHTML = '';
+
+            // Collect form values
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const subject = document.getElementById('subject').value.trim();
+            const message = document.getElementById('message').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+
+            if (!name || !email || !subject || !message) {
+                formResponse.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ⚠️ Please fill in all required fields.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
                 return;
             }
-            
-            // Email validation
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                alert('Please enter a valid email address.');
+                formResponse.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ⚠️ Please enter a valid email address.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
                 return;
             }
-            
-            // If validation passes, show success message
-            alert('Thank you for your message! We will get back to you shortly.');
-            contactForm.reset();
-            
-            // In a real application, you would send the form data to the server here
-            // using fetch or another AJAX method
+
+            const data = { name, email, subject, message, phone };
+
+            try {
+                const response = await fetch("/api/contact/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    formResponse.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            ✅ <strong>${result.message}</strong><br>
+                            Submitted at: ${result.submitted_at}<br>
+                            ${result.next_steps}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`;
+                    contactForm.reset();
+                } else {
+                    let errorMessages = '';
+                    for (const [key, val] of Object.entries(result.errors)) {
+                        errorMessages += `<li>${key}: ${val.join(', ')}</li>`;
+                    }
+                    formResponse.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ❌ There were errors with your submission:
+                            <ul>${errorMessages}</ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>`;
+                }
+            } catch (error) {
+                formResponse.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ❌ Failed to send message. Please try again later.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
+                console.error(error);
+            }
         });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 });
 </script>
+
+
 
 {% endblock %}

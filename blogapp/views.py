@@ -2,10 +2,12 @@ from django.shortcuts import render,get_object_or_404
 from rest_framework.decorators import api_view,renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
-from .models import Post,Project
-from .serializers import PostSerializer,ProjectSerializer
+from .models import Post,Project,Contact
+from .serializers import PostSerializer,ProjectSerializer,ContactSerializer
 from rest_framework import status
+from django.utils.timezone import now
 # Create your views here.
+
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer])
@@ -24,10 +26,7 @@ def services_view(request):
 def about_view(request):
     return Response(template_name='about.html')
 
-@api_view(['GET'])
-@renderer_classes([TemplateHTMLRenderer])
-def contact_view(request):
-    return Response(template_name='contact.html')
+
 
 
 @api_view(['GET'])
@@ -62,16 +61,24 @@ def project_detail(request,slug):
     return Response(data,template_name='project_detail.html',status=status.HTTP_200_OK )
 
 @api_view(['POST'])
-@renderer_classes([TemplateHTMLRenderer])
-def contact_form_view(request):
+def contact_form(request):
+    serializer=ContactSerializer(data=request.data)
     if request.method == 'POST':
-        name = request.data.get('name')
-        email = request.data.get('email')
-        message = request.data.get('message')
+        if serializer.is_valid():
+            serializer.save()
+               
         
         # Here you would typically save the contact form data to the database or send an email
         # For now, we will just return a success response
-        
-        return Response({'message': 'Contact form submitted successfully!'}, status=status.HTTP_201_CREATED)
+            return Response({
+            'message': 'Contact form submitted successfully!',
+            'submitted_at': now().strftime("%Y-%m-%d %H:%M:%S"),
+            'next_steps': 'Our team will get back to you within 24 hours.'
+        }, status=status.HTTP_201_CREATED)
     
     return Response({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer])
+def contact_view(request):
+    return Response(template_name='contact.html')
